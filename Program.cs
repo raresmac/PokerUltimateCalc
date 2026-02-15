@@ -204,7 +204,6 @@ namespace PokerUltimateCalc
             }
             if (total == 0) return;
 
-            // Store in list for sorting
             ProbResult[] results = new ProbResult[10];
             int resCount = 0;
             for (int i = (int)cur; i < 10; i++)
@@ -218,7 +217,6 @@ namespace PokerUltimateCalc
                 }
             }
 
-            // Manual Bubble Sort (Decending)
             for (int i = 0; i < resCount - 1; i++)
             {
                 for (int j = 0; j < resCount - i - 1; j++)
@@ -245,7 +243,6 @@ namespace PokerUltimateCalc
             HandType type;
             EvaluateScoreInternal(hole, board, out type);
 
-            // Re-run part of logic to get specific ranks
             Span<int> rCounts = stackalloc int[13];
             Span<uint> sMasks = stackalloc uint[4];
             uint allR = 0;
