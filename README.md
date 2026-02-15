@@ -1,4 +1,4 @@
-# 🃏 PokerUltimateCalc: High-Performance Poker Analytical Engine
+# PokerUltimateCalc: High-Performance Poker Analytical Engine
 
 A professional-grade **Texas Hold'em Analytical Engine** and terminal simulator built in C#. This project provides real-time, exact mathematical probabilities and win equity calculations for 1 to 10 players (you + 9 opponents).
 
