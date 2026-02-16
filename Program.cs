@@ -49,9 +49,8 @@ namespace PokerUltimateCalc
             Console.ResetColor();
 
             Console.Write("  Enter number of opponents (1-9): ");
-            string input = Console.ReadLine();
-            int numOpponents;
-            if (!int.TryParse(input, out numOpponents)) numOpponents = 1;
+            string input = Console.ReadLine() ?? "1";
+            if (!int.TryParse(input, out int numOpponents)) numOpponents = 1;
             numOpponents = Math.Clamp(numOpponents, 1, 9);
 
             bool running = true;
@@ -249,28 +248,69 @@ namespace PokerUltimateCalc
             for (int i = 0; i < hole.Length; i++) AddStats(hole[i], rCounts, sMasks, ref allR);
             for (int i = 0; i < board.Length; i++) AddStats(board[i], rCounts, sMasks, ref allR);
 
-            if (type == HandType.RoyalFlush) return "Royal Flush";
+            int q = -1, t1 = -1, t2 = -1, p1 = -1, p2 = -1, hCard = -1;
 
-            int q = -1, t1 = -1, t2 = -1, p1 = -1, p2 = -1, high = -1;
-            for (int i = 12; i >= 0; i--)
-            {
+            // Multiples and High Card
+            for (int i = 12; i >= 0; i--) {
                 if (rCounts[i] == 4) q = i;
                 else if (rCounts[i] == 3) { if (t1 == -1) t1 = i; else t2 = i; }
                 else if (rCounts[i] == 2) { if (p1 == -1) p1 = i; else p2 = i; }
-                if (rCounts[i] > 0 && high == -1) high = i;
+                if (rCounts[i] > 0 && hCard == -1) hCard = i;
             }
+
+            // Straights/Flushes
+            int handHigh = -1;
 
             switch (type)
             {
-                case HandType.StraightFlush: return $"Straight Flush ({RankNames[high]} high)";
-                case HandType.FourOfAKind: return $"Four of a Kind: {RankNames[q]}s";
-                case HandType.FullHouse: return $"Full House: {RankNames[t1]}s over {RankNames[p1 != -1 ? p1 : t2]}s";
-                case HandType.Flush: return $"Flush ({RankNames[high]} high)";
-                case HandType.Straight: return $"Straight ({RankNames[high]} high)";
-                case HandType.ThreeOfAKind: return $"Three of a Kind: {RankNames[t1]}s";
-                case HandType.TwoPair: return $"Two Pair: {RankNames[p1]}s and {RankNames[p2]}s";
-                case HandType.Pair: return $"Pair of {RankNames[p1]}s";
-                default: return $"High Card: {RankNames[high]}";
+                case HandType.RoyalFlush: 
+                    return "Royal Flush";
+
+                case HandType.StraightFlush:
+                    for (int s = 0; s < 4; s++) {
+                        uint m = sMasks[s];
+                        int c = 0; uint v = m; while (v > 0) { v &= v - 1; c++; }
+                        if (c >= 5) {
+                            for (int i = 8; i >= 0; i--) 
+                                if ((m & (0x1Fu << i)) == (0x1Fu << i)) { handHigh = i + 4; break; }
+                            if (handHigh == -1 && (m & 0x100F) == 0x100F) handHigh = 3;
+                        }
+                    }
+                    return $"Straight Flush ({RankNames[handHigh]} high)";
+
+                case HandType.FourOfAKind: 
+                    return $"Four of a Kind: {RankNames[q]}s";
+
+                case HandType.FullHouse: 
+                    return $"Full House: {RankNames[t1]}s over {RankNames[p1 != -1 ? p1 : t2]}s";
+
+                case HandType.Flush:
+                    for (int s = 0; s < 4; s++) {
+                        uint m = sMasks[s];
+                        int c = 0; uint v = m; while (v > 0) { v &= v - 1; c++; }
+                        if (c >= 5) {
+                            for (int i = 12; i >= 0; i--) if ((m & (1u << i)) != 0) { handHigh = i; break; }
+                        }
+                    }
+                    return $"Flush ({RankNames[handHigh]} high)";
+
+                case HandType.Straight:
+                    for (int i = 8; i >= 0; i--) 
+                        if ((allR & (0x1Fu << i)) == (0x1Fu << i)) { handHigh = i + 4; break; }
+                    if (handHigh == -1 && (allR & 0x100F) == 0x100F) handHigh = 3;
+                    return $"Straight ({RankNames[handHigh]} high)";
+
+                case HandType.ThreeOfAKind: 
+                    return $"Three of a Kind: {RankNames[t1]}s";
+
+                case HandType.TwoPair: 
+                    return $"Two Pair: {RankNames[p1]}s and {RankNames[p2]}s";
+
+                case HandType.Pair: 
+                    return $"Pair of {RankNames[p1]}s";
+
+                default: 
+                    return $"High Card: {RankNames[hCard]}";
             }
         }
 
